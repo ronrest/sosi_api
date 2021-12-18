@@ -26,10 +26,10 @@ class MyClient(BaseClient):
 ## API that requires API key
 
 ```python
+import decouple   # pip install python-decouple
 from sosapi import BaseClient
 
 # Look for credentials in `.env` file located in working directory
-# This depends on the `decouple` library (`pip install python-decouple`)
 env = decouple.AutoConfig(search_path="./.env")
 
 class MyClient(BaseClient):
