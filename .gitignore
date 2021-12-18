@@ -1,0 +1,6 @@
+# BUILD ARTEFACTS
+*.egg-info
+__pycache__
+
+# SECRETS
+.env
