@@ -61,7 +61,7 @@ import time
 import decouple
 import requests
 
-from .utils.times import DATETIME_FORMAT, convert_timearg_as_datetime
+from .utils.dt import DATETIME_FORMAT, convert_timearg_as_datetime
 
 # env = decouple.AutoConfig(search_path="./.env")
 # from .utils.signatures import sign_params, sign_message
