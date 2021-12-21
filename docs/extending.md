@@ -3,7 +3,7 @@
 ## Basic
 
 ```python
-from sosapi import BaseClient
+from sosi_api import BaseClient
 
 class MyClient(BaseClient):
     def __init__(self):
@@ -27,7 +27,7 @@ class MyClient(BaseClient):
 
 ```python
 import decouple   # pip install python-decouple
-from sosapi import BaseClient
+from sosi_api import BaseClient
 
 # Look for credentials in `.env` file located in working directory
 env = decouple.AutoConfig(search_path="./.env")

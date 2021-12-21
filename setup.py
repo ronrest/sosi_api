@@ -1,14 +1,14 @@
 import setuptools
 
 setuptools.setup(
-    name="sosapi",
+    name="sosi_api",
     version="0.0.1",
     author="ronny",
     description='A base for creating a python wrapper of a REST API',
-    url="https://github.com/ronrest/sosapi",
+    url="https://github.com/ronrest/sosi_api",
     project_urls={
-        "Bug Tracker": "https://github.com/ronrest/sosapi/issues",
-        "Documentation": "https://github.com/ronrest/sosapi/blob/master/README.md",
+        "Bug Tracker": "https://github.com/ronrest/sosi_api/issues",
+        "Documentation": "https://github.com/ronrest/sosi_api/blob/master/README.md",
     },
     classifiers=[
         "License :: OSI Approved :: MIT License",

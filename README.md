@@ -1,6 +1,6 @@
-# Sosapi
+# sosi_api
 
-Pronounced *"So-sappy"*.
+SoSimple API client.
 
 A simple, base for building REST API client wrappers in Python.
 
