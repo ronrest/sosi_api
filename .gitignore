@@ -1,6 +1,11 @@
 # BUILD ARTEFACTS
 *.egg-info
 __pycache__
+dist/
 
 # SECRETS
 .env
+
+# SCRATCHPAD FILES
+scrap/
+scrap_*
