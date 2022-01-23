@@ -61,7 +61,10 @@ import time
 import decouple
 import requests
 
+from . import exceptions
+
 from .utils.dt import DATETIME_FORMAT, convert_timearg_as_datetime
+
 
 # env = decouple.AutoConfig(search_path="./.env")
 # from .utils.signatures import sign_params, sign_message
@@ -95,12 +98,13 @@ class BaseClient:
 
     def _process_response(self, response, response_kind=None):
         response_kind = self.response_kind if response_kind is None else response_kind
-        if response.status_code == 200:
+        if response.ok:
             if response_kind.lower() == "json":
                 return response.json()
             else:
                 return response.text()
         else:
+            # TRY EXTRACT A RESPONSE MESSAGE
             try:
                 if response_kind.lower() == "json":
                     msg = response.json()
@@ -109,8 +113,22 @@ class BaseClient:
                     msg = response.text()
                 except:
                     msg = None
-            print(f"ERROR: with this response message {msg}")
-            response.raise_for_status()
+
+            # CATCH EXCEPTIONS
+            if response.status_code == 429:
+                self.handle_too_many_requests(response, msg)
+            else:
+                print(f"ERROR: with this response message {msg}")
+                response.raise_for_status()
+
+    def handle_too_many_requests(self, response, msg=None, **kwargs):
+        retry_after = response.headers.get("Retry-After")
+        if retry_after is not None:
+            retry_after = int(retry_after)
+            # retry_after_hours = retry_after / (60.0*60)
+        else:
+            retry_after_hours = None
+        raise exceptions.TooManyRequests(f"Retry after {retry_after} seconds", retry_after)
 
     def _time_range_batched_request(self, url, params=None, kind="get", t1=None, t2=None, window_delta=None, limit=1000):
         raise NotImplementedError("This method is not implemented yet")
