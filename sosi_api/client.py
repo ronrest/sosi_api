@@ -142,10 +142,15 @@ class BaseClient:
         """
         self._status_handlers = {**self._status_handlers, **status_handlers}
 
-    def request(self, url, params=None, headers=None, kind="get", response_kind=None):
+    def request(self, url=None, endpoint=None, params=None, headers=None, kind="get", response_kind=None):
         return self._request(url, params=params, headers=headers, kind=kind, response_kind=response_kind)
 
-    def _request(self, url, params=None, headers=None, kind="get", response_kind=None):
+    def _request(self, url=None, endpoint=None, params=None, headers=None, kind="get", response_kind=None):
+        if (url is None) and (endpoint is None):
+            raise ValueError("Either `url` or `endpoint` must be provided")
+        if url is None:
+            url = self.base_url + str(endpoint)
+
         if params is None:
             params = {}
         else:
