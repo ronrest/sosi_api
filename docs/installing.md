@@ -1,5 +1,12 @@
 # Installing
 
+## Installing from PyPi
+
+```bash
+pip install sosi-api
+```
+
+## Installing From Source Code
 
 ```bash
 # ------------------------------------------------------------------------------
