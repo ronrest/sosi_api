@@ -1,6 +1,6 @@
 from .. import exceptions
 
-def handle_too_many_requests(self, response, msg=None, **kwargs):
+def handle_too_many_requests(response, msg=None, **kwargs):
     retry_after = response.headers.get("Retry-After")
     if retry_after is not None:
         retry_after = int(retry_after)
