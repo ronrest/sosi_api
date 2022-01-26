@@ -2,13 +2,12 @@
 
 SoSimple API client.
 
-A simple base for building REST API client wrappers in Python.
-
-**Basics**
+A simple base, from which to build your own REST API client wrappers in Python.
 
 - [Installing](docs/installing.md)
-- [Using](docs/using.md)
+- Using
+    - [Basic](docs/basic.md)
+    - [Response Status Handlers](docs/status_handlers.md)
+    - [Extending](docs/extending.md)
 - [Contributing](docs/contributing.md)
 
-**Advanced**
-- [Response Status Handlers](docs/status_handlers.md)

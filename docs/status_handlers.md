@@ -1,11 +1,11 @@
 # Status Handlers
 
-Status handlers are functions that allow for custom behaviour when a reponse is received with a particular HTTP response code (eg. `404`).
+Status handlers are functions that allow custom behaviour for responses with different HTTP response codes (eg. `404`).
 
 
 ## Argument Signature
 
-All status handler functions should have the following arguments signature:
+All status handler functions you create should have the following arguments signature:
 
 ```python
 def handle_something(response, msg=None, **kwargs):
@@ -35,7 +35,8 @@ Suppose there is an API that assigns the following status codes:
 - `435`
   - You have been blocked.
   - Because you have continually violated the hard limit.
-
+- `403`
+  - You do not have enough permissions to access this endpoint.
 
 
 ```python
@@ -57,13 +58,35 @@ def handle_hard_limit(response, msg=None, **kwargs):
 def handle_blocked(response, msg=None, **kwargs):
     raise requests.HTTPError("You have been blocked.")
 
+def handle_forbidden(response, msg=None, **kwargs):
+    raise requests.HTTPError("You are not allowed here!")
+    
 
-# Create client and assign status handlers
+# ----------------------------------------
+# CREATE CLIENT AND ASSIGN STATUS HANDLERS
+# ----------------------------------------
 status_handlers = {
     434: handle_soft_limit,
     429: handle_hard_limit,
     435: handle_blocked,
+    403: handle_forbidden,
 }
-client = BaseClient(status_handlers=status_handlers)
+client = BaseClient("https://httpbin.org", status_handlers=status_handlers)
+
+# ----------------------------------------
+# MAKE SOME API CALLS
+# ----------------------------------------
+client.request(endpoint="/status/434")
+#> WARNING: soft limit reached. Pausing for a second.
+
+client.request(endpoint="/status/429")
+#> HTTPError: You have reached the hard limit.
+
+client.request(endpoint="/status/435")
+#> HTTPError: You have been blocked.
+
+client.request(endpoint="/status/403")
+#> HTTPError: You are not allowed here!
+
 ```
 
