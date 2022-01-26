@@ -55,23 +55,37 @@ Rejected/unsuccessful orders are not guaranteed to have X-MBX-ORDER-COUNT-** hea
 The order rate limit is counted against each account.
 """
 import copy
-import datetime
-import time
+# import datetime
+# import time
 
-import decouple
+# import decouple
 import requests
 
-from . import exceptions
-
-from .utils.dt import DATETIME_FORMAT, convert_timearg_as_datetime
-
+# from .utils.dt import DATETIME_FORMAT, convert_timearg_as_datetime
+from .utils.status_handlers import handle_too_many_requests
 
 # env = decouple.AutoConfig(search_path="./.env")
 # from .utils.signatures import sign_params, sign_message
 
 
 class BaseClient:
-    def __init__(self, base_url, headers=None, max_requests_per_min=60, response_kind="json"):
+    def __init__(self, base_url, headers=None, max_requests_per_min=60, response_kind="json", status_handlers=None):
+        """
+        Args:
+            base_url (str): The base url of the API.
+            headers (dict): The headers to be sent with each request.
+            max_requests_per_min (int): The maximum number of requests per minute.
+            response_kind (str): The kind of response to return. eg "json" or "text"
+            status_handlers (dict): 
+                A dictionary of response status codes and functions to handle them.
+                Each function must have the following argument structure:
+                    func(response, msg=None, **kwargs)
+                NOTE: if you have status handlers that depend on the state of the 
+                client, or are defined as instance methods of the client, then 
+                you should leave this field blank, and use the 
+                `client.add_status_handlers()` method once the client is 
+                instantiated.
+        """
         self.base_url = base_url
         self.request_interval = 1.0 / (max_requests_per_min / 60.0) # time to wait between requests
         if headers is None:
@@ -80,7 +94,58 @@ class BaseClient:
             self.headers = copy.deepcopy(headers)
         self.response_kind = response_kind
 
+        # Default status handlers
+        self._status_handlers = {
+            "429": handle_too_many_requests,
+        }
+
+        # Add user-defined status handlers
+        if status_handlers is not None:
+            self.add_status_handlers(status_handlers)
+
+    def add_status_handlers(self, status_handlers):
+        """Add aditional response status handler functions to handle different
+        kinds of response errors.
+        
+        Args:
+            status_handlers (dict):
+                A dictionary of response status codes and functions to handle
+                them. 
+                - Each key must be an integer status code (eg `404`)
+                - Each value must be one of the following:
+                    - A function with the following argument structure:
+
+                          func(response, msg=None, **kwargs)
+
+                    - A `None` value. Which will remove a handler.
+                    - A "pass" string. Which will ignore the status, and return
+                      the response message as if nothing bad happened.
+
+        Note:
+            Note, if you provide keys that already exist, they will override the
+            existing handlers. New keys will be appended. And all other keys
+            will remain as they were.
+
+        Example:
+            # Create a client with some status handlers
+            original_status_handlers = {429:func1, 430:func2}
+            >>> client = BaseClient("http://example.com", status_handlers=original_status_handlers)
+            
+            # Overwrite the existing handler for 430, and add a new handler for 431
+            >>> client.add_status_handlers({430:func3, 431:func4})
+
+            # Remove status handler for 429
+            >>> client.add_status_handlers({429:None})
+
+            # Make it ignore status 432
+            >>> client.add_status_handlers({432:"pass"})
+        """
+        self._status_handlers = {**self._status_handlers, **status_handlers}
+
     def request(self, url, params=None, headers=None, kind="get", response_kind=None):
+        return self._request(url, params=params, headers=headers, kind=kind, response_kind=response_kind)
+
+    def _request(self, url, params=None, headers=None, kind="get", response_kind=None):
         if params is None:
             params = {}
         else:
@@ -97,6 +162,10 @@ class BaseClient:
         return self._process_response(response)
 
     def _process_response(self, response, response_kind=None):
+        """Attempt to extract the response message from the response object if
+        it was a succesful response, otherwise handle using one of the response
+        status handlers.
+        """
         response_kind = self.response_kind if response_kind is None else response_kind
         if response.ok:
             if response_kind.lower() == "json":
@@ -114,21 +183,17 @@ class BaseClient:
                 except:
                     msg = None
 
-            # CATCH EXCEPTIONS
-            if response.status_code == 429:
-                self.handle_too_many_requests(response, msg)
+            # CATCH EXCEPTIONS - using one of the status handlers
+            status_code = response.status_code
+            response_function = self._status_handlers.get(int(status_code))
+            if response_function is not None:
+                response_function(response, msg)
+            if response_function == "pass":
+                # Return as if nothing bad happened
+                return msg
             else:
                 print(f"ERROR: with this response message {msg}")
                 response.raise_for_status()
-
-    def handle_too_many_requests(self, response, msg=None, **kwargs):
-        retry_after = response.headers.get("Retry-After")
-        if retry_after is not None:
-            retry_after = int(retry_after)
-            # retry_after_hours = retry_after / (60.0*60)
-        else:
-            retry_after_hours = None
-        raise exceptions.TooManyRequests(f"Retry after {retry_after} seconds", retry_after)
 
     def _time_range_batched_request(self, url, params=None, kind="get", t1=None, t2=None, window_delta=None, limit=1000):
         raise NotImplementedError("This method is not implemented yet")
