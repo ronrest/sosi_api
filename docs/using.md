@@ -1,6 +1,32 @@
-# Extending the Base Client
+# Using
 
 ## Basic
+
+```python
+from sosi_api import BaseClient
+client = BaseClient()
+
+# -------------------------------------
+# MAKE A BASIC REQUEST
+# -------------------------------------
+client.request("http://httpbin.org/json")
+
+# -------------------------------------
+# ADD A CUSTOM RESPONSE STATUS HANDLER
+# -------------------------------------
+def handle_forbidden(response, msg=None, **kwargs):
+    print("You are not allowed!")
+client.add_status_handlers({403: handle_forbidden})
+
+client.request("http://httpbin.org/status/403")
+#> You are not allowed!
+```
+
+
+
+## Extending
+
+The primary focus of SoSi API is to be used as a base class, for you to extend and create your own API clients.
 
 ```python
 from sosi_api import BaseClient
@@ -23,7 +49,7 @@ class MyClient(BaseClient):
 ```
 
 
-## API that requires API key
+## Creating Client That Requires API Key
 
 ```python
 import decouple   # pip install python-decouple
