@@ -62,7 +62,7 @@ import copy
 import requests
 
 # from .utils.dt import DATETIME_FORMAT, convert_timearg_as_datetime
-from .utils.status_handlers import handle_too_many_requests
+from .utils.status_handlers import handle_too_many_requests, DEFAULT_STATUS_HANDLERS
 
 # env = decouple.AutoConfig(search_path="./.env")
 # from .utils.signatures import sign_params, sign_message
@@ -94,12 +94,7 @@ class BaseClient:
             self.headers = copy.deepcopy(headers)
         self.response_kind = response_kind
 
-        # Default status handlers
-        self._status_handlers = {
-            429: handle_too_many_requests,
-        }
-
-        # Add user-defined status handlers
+        self._status_handlers = DEFAULT_STATUS_HANDLERS
         if status_handlers is not None:
             self.add_status_handlers(status_handlers)
 
@@ -116,6 +111,9 @@ class BaseClient:
                     - A function with the following argument structure:
 
                           func(response, msg=None, **kwargs)
+
+                          where `msg` is the extracted response message
+                          (eg from calling response.json() or response.text())
 
                     - A `None` value. Which will remove a handler.
                     - A "pass" string. Which will ignore the status, and return
