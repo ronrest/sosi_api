@@ -69,7 +69,7 @@ from .utils.status_handlers import handle_too_many_requests
 
 
 class BaseClient:
-    def __init__(self, base_url, headers=None, max_requests_per_min=60, response_kind="json", status_handlers=None):
+    def __init__(self, base_url=None, headers=None, max_requests_per_min=60, response_kind="json", status_handlers=None):
         """
         Args:
             base_url (str): The base url of the API.
@@ -86,7 +86,7 @@ class BaseClient:
                 `client.add_status_handlers()` method once the client is 
                 instantiated.
         """
-        self.base_url = base_url
+        self.base_url = "" if base_url is None else base_url
         self.request_interval = 1.0 / (max_requests_per_min / 60.0) # time to wait between requests
         if headers is None:
             self.headers = {}
@@ -96,7 +96,7 @@ class BaseClient:
 
         # Default status handlers
         self._status_handlers = {
-            "429": handle_too_many_requests,
+            429: handle_too_many_requests,
         }
 
         # Add user-defined status handlers
@@ -187,8 +187,8 @@ class BaseClient:
             status_code = response.status_code
             response_function = self._status_handlers.get(int(status_code))
             if response_function is not None:
-                response_function(response, msg)
-            if response_function == "pass":
+                response_function(response=response, msg=msg)
+            elif response_function == "pass":
                 # Return as if nothing bad happened
                 return msg
             else:
