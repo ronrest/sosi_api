@@ -163,6 +163,29 @@ class BaseClient:
         elif kind.lower() == "post":
             response =  requests.post(url, params, headers=headers)
         return self._process_response(response)
+    
+    def _extract_message(self, response, response_kind=None):
+        """Extract the contents of the response. This can be overrriden if you want a custom parsing
+        of the message, or if you want to also include some metadata.
+        """
+        response_kind = self.response_kind if response_kind is None else response_kind
+        try:
+            if response_kind.lower() == "raw":
+                msg = response
+            elif response_kind.lower() == "json":
+                msg = response.json()
+            elif response_kind.lower() == "text":
+                msg = response.text
+            else:
+                msg = response
+        except:
+            print("Failed to extract the message, falling back to either text or response object"
+                  "itself")
+            try:
+                msg = response.text
+            except:
+                msg = response
+        return msg
 
     def _process_response(self, response, response_kind=None):
         """Attempt to extract the response message from the response object if
@@ -170,22 +193,10 @@ class BaseClient:
         status handlers.
         """
         response_kind = self.response_kind if response_kind is None else response_kind
+        msg = self._extract_message(response=response, response_kind=response_kind)
         if response.ok:
-            if response_kind.lower() == "json":
-                return response.json()
-            else:
-                return response.text()
+            return msg
         else:
-            # TRY EXTRACT A RESPONSE MESSAGE
-            try:
-                if response_kind.lower() == "json":
-                    msg = response.json()
-            except:
-                try:
-                    msg = response.text()
-                except:
-                    msg = None
-
             # CATCH EXCEPTIONS - using one of the status handlers
             status_code = response.status_code
             response_function = self._status_handlers.get(int(status_code))

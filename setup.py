@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name="sosi_api",
-    version="0.1.1",
+    version="0.1.2",
     author="ronny",
     description='A base for creating a python wrapper of a REST API',
     url="https://github.com/ronrest/sosi_api",
