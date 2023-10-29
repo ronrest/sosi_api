@@ -14,3 +14,11 @@ pip-compile
 pip-compile setup.py --extra dev -o requirements-dev.txt
 
 ```
+
+## (Core developers) Build/Push to pypi
+
+```bash
+python -m build
+python -m twine upload --repository pypi dist/*
+
+```
