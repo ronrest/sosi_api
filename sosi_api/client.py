@@ -140,28 +140,36 @@ class BaseClient:
         """
         self._status_handlers = {**self._status_handlers, **status_handlers}
 
-    def request(self, url=None, endpoint=None, params=None, headers=None, kind="get", response_kind=None):
-        return self._request(url=url, endpoint=endpoint, params=params, headers=headers, kind=kind, response_kind=response_kind)
+    def request(self, url=None, endpoint=None, params=None, body_params=None, url_params=None, headers=None, kind="get", response_kind=None):
+        """Args:
+            body_params: parameters to pass as part of the body.
+        """
+        if params is not None:
+            print(f"WARNING: `params` is deprecated, use `body_params` or url_params instead")
+            if kind.lower() == "get":
+                url_params = params
+            elif kind.lower() in ["post", "put", "delete"]:
+                body_params = params
 
-    def _request(self, url=None, endpoint=None, params=None, headers=None, kind="get", response_kind=None):
+        return self._request(url=url, endpoint=endpoint, body_params=body_params, url_params=url_params, headers=headers, kind=kind, response_kind=response_kind)
+
+    def _request(self, url=None, endpoint=None, body_params=None, url_params=None, headers=None, kind="get", response_kind=None):
         if (url is None) and (endpoint is None):
             raise ValueError("Either `url` or `endpoint` must be provided")
         if url is None:
             url = self.base_url + str(endpoint)
 
-        if params is None:
-            params = {}
-        else:
-            params = copy.deepcopy(params)
+        body_params = copy.deepcopy(body_params) if body_params is not None else {}
+        url_params = copy.deepcopy(url_params) if url_params is not None else {}
 
         if headers is None:
             headers = {}
         headers = {**self.headers, **headers}
 
         if kind.lower() == "get":
-            response = requests.get(url, params, headers=headers)
+            response = requests.get(url, params=url_params, json=body_params, headers=headers)
         elif kind.lower() == "post":
-            response =  requests.post(url, params, headers=headers)
+            response =  requests.post(url, params=url_params, json=body_params, headers=headers)
         return self._process_response(response)
     
     def _extract_message(self, response, response_kind=None):
