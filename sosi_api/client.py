@@ -170,7 +170,7 @@ class BaseClient:
             response = requests.get(url, params=url_params, json=body_params, headers=headers)
         elif kind.lower() == "post":
             response =  requests.post(url, params=url_params, json=body_params, headers=headers)
-        return self._process_response(response)
+        return self._process_response(response, response_kind=response_kind)
     
     def _extract_message(self, response, response_kind=None):
         """Extract the contents of the response. This can be overrriden if you want a custom parsing
@@ -206,6 +206,8 @@ class BaseClient:
             return msg
         else:
             # CATCH EXCEPTIONS - using one of the status handlers
+            # TODO: check what happens when there is an error code, and the
+            #       response_kind is "raw"
             status_code = response.status_code
             response_function = self._status_handlers.get(int(status_code))
             if response_function is not None:
