@@ -6,3 +6,4 @@
 - Documentation for examples of dealing with rate limits.
 - Documentation for authentication using `Bearer` token.
   - See coinjar exchange extension.
+- Replace all pytz occurences with dateutil equivalents.
